@@ -358,8 +358,8 @@ This project demonstrates practical understanding of:
 
 **Your Name**
 
-- GitHub: [@your-github](https://github.com/Thatipramod/hospital-management-system)
-- LinkedIn: [Your LinkedIn](https://www.linkedin.com/in/thati-pramod/)
+- GitHub: [https://github.com/Thatipramod/hospital-management-system](https://github.com/Thatipramod/hospital-management-system)
+- LinkedIn: [https://www.linkedin.com/in/thati-pramod](https://www.linkedin.com/in/thati-pramod/)
 
 ---
 
