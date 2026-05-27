@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Physician Portal - Pramod Hospital</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 0; }
+        .navbar { background-color: #27ae60; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .navbar h2 { margin: 0; }
+        .logout-btn { background: white; color: #27ae60; padding: 8px 15px; text-decoration: none; border-radius: 5px; font-weight: bold; }
+        .container { max-width: 1000px; margin: 30px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        th { background-color: #f2f2f2; color: #333; }
+        .status-scheduled { color: #f39c12; font-weight: bold; }
+        .status-completed { color: #27ae60; font-weight: bold; }
+        .action-btn { background-color: #3498db; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;}
+        .action-btn:hover { background-color: #2980b9; }
+        
+        /* Modal Styles for Prescription */
+        .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
+        .modal-content { background-color: #fefefe; margin: 10% auto; padding: 20px; border: 1px solid #888; width: 50%; border-radius: 8px; border-top: 5px solid #3498db;}
+        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close:hover { color: black; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; resize: vertical; }
+        .submit-btn { background: #27ae60; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%;}
+    </style>
+</head>
+<body>
+<div class="navbar">
+    <h2>Pramod Hospital | Physician Portal</h2>
+    <a href="/api/logout" class="logout-btn">Logout</a>
+</div>
+
+<div class="container">
+    <h1 style="color: #2c3e50;">Welcome, {{ name }}</h1>
+    <p style="color: #7f8c8d;">Manage your daily appointments and patient prescriptions.</p>
+    
+    <table>
+        <thead>
+            <tr><th>Appt ID</th><th>Patient Name</th><th>Date & Time</th><th>Status</th><th>Action</th></tr>
+        </thead>
+        <tbody id="apptTableBody">
+            </tbody>
+    </table>
+</div>
+
+<div id="prescriptionModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <h2>Complete Appointment & Write Prescription</h2>
+        <p>Patient Appt ID: <span id="modalApptId" style="font-weight: bold;"></span></p>
+        
+        <form id="prescriptionForm">
+            <input type="hidden" id="apptIdInput">
+            <div class="form-group">
+                <label>Prescribed Medicines:</label>
+                <textarea id="medicines" rows="3" placeholder="e.g., Paracetamol 500mg, Amoxicillin 250mg" required></textarea>
+            </div>
+            <div class="form-group">
+                <label>Dosage & Instructions:</label>
+                <textarea id="instructions" rows="3" placeholder="e.g., Take twice daily after meals for 5 days." required></textarea>
+            </div>
+            <button type="submit" class="submit-btn">Save Prescription & Generate Bill</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // 1. Fetch and Display Appointments
+    async function loadAppointments() {
+        const res = await fetch('/api/doctor/appointments');
+        const appointments = await res.json();
+        const tbody = document.getElementById('apptTableBody');
+        tbody.innerHTML = ''; // Clear existing rows
+        
+        if (appointments.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">No appointments scheduled.</td></tr>`;
+            return;
+        }
+
+        appointments.forEach(appt => {
+            // Determine status color and if action button should be shown
+            let statusClass = appt.status === 'Completed' ? 'status-completed' : 'status-scheduled';
+            let actionHtml = appt.status === 'Scheduled' 
+                ? `<button class="action-btn" onclick="openModal(${appt.id})">Prescribe</button>` 
+                : `<span style="color: #7f8c8d;">Done</span>`;
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>#${appt.id}</td>
+                    <td>${appt.patient}</td>
+                    <td>${appt.date}</td>
+                    <td class="${statusClass}">${appt.status}</td>
+                    <td>${actionHtml}</td>
+                </tr>
+            `;
+        });
+    }
+
+    // 2. Modal Logic
+    const modal = document.getElementById("prescriptionModal");
+    
+    function openModal(apptId) {
+        document.getElementById("modalApptId").innerText = apptId;
+        document.getElementById("apptIdInput").value = apptId;
+        modal.style.display = "block";
+    }
+
+    function closeModal() {
+        modal.style.display = "none";
+        document.getElementById("prescriptionForm").reset();
+    }
+
+    // 3. Submit Prescription Logic
+    document.getElementById('prescriptionForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const apptId = document.getElementById("apptIdInput").value;
+        const medicines = document.getElementById("medicines").value;
+        const instructions = document.getElementById("instructions").value;
+
+        const res = await fetch('/api/doctor/complete_appointment', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ 
+                appointment_id: apptId, 
+                medicines: medicines, 
+                instructions: instructions 
+            })
+        });
+
+        const data = await res.json();
+        if(res.ok) {
+            alert("Success: " + data.message);
+            closeModal();
+            loadAppointments(); // Refresh the table
+        } else {
+            alert("Error: " + data.error);
+        }
+    });
+
+    // Run on page load
+    window.onload = loadAppointments;
+</script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Doctor Portal - Pramod Hospital</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #e8f5e9; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px;}
+        .auth-container { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 450px; border-top: 5px solid #27ae60; }
+        h1 { text-align: center; color: #2c3e50; font-size: 24px; margin-bottom: 5px; }
+        p.subtitle { text-align: center; color: #27ae60; font-weight: bold; margin-bottom: 25px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #27ae60; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button:hover { background: #2ecc71; }
+        .toggle-text { text-align: center; margin-top: 15px; font-size: 14px; }
+        .toggle-text a { color: #27ae60; cursor: pointer; text-decoration: underline; }
+        .hidden { display: none; }
+        .msg { text-align: center; margin-top: 15px; font-weight: bold; }
+        .error { color: #e74c3c; }
+        .success { color: #27ae60; }
+        .patient-link { display: block; text-align: center; margin-top: 20px; color: #7f8c8d; text-decoration: none; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="auth-container">
+    <h1>Pramod Hospital</h1>
+    <p class="subtitle">Physician Secure Portal</p>
+
+    <div id="loginSection">
+        <form id="docLoginForm">
+            <div class="form-group"><label>Doctor Username</label><input type="text" id="l_user" required></div>
+            <div class="form-group"><label>Password</label><input type="password" id="l_pass" required></div>
+            <button type="submit">Access Schedule</button>
+        </form>
+        <div class="toggle-text">New Physician? <a onclick="toggleForms()">Register here</a></div>
+    </div>
+
+    <div id="signupSection" class="hidden">
+        <form id="docSignupForm">
+            <div class="form-group"><label>Full Name (with Dr.)</label><input type="text" id="s_name" required></div>
+            <div class="form-group"><label>Specialization</label><input type="text" id="s_spec" placeholder="e.g. Cardiologist" required></div>
+            <div class="form-group"><label>Qualification</label><input type="text" id="s_qual" placeholder="e.g. MBBS, MD" required></div>
+            <div class="form-group"><label>Consultation Fee (₹)</label><input type="number" id="s_fee" required></div>
+            <div class="form-group"><label>Username</label><input type="text" id="s_user" required></div>
+            <div class="form-group"><label>Password</label>
+                <input type="password" id="s_pass" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$" title="Must contain at least one number, one uppercase, one lowercase letter, one special character, and at least 8 or more characters" required>
+            </div>
+            <button type="submit">Register Account</button>
+        </form>
+        <div class="toggle-text">Already registered? <a onclick="toggleForms()">Login here</a></div>
+    </div>
+
+    <div id="authMsg" class="msg"></div>
+    <a href="/" class="patient-link">← Back to Patient Portal</a>
+</div>
+
+<script>
+    function toggleForms() {
+        document.getElementById('loginSection').classList.toggle('hidden');
+        document.getElementById('signupSection').classList.toggle('hidden');
+        document.getElementById('authMsg').innerText = '';
+    }
+
+    // Login logic
+    document.getElementById('docLoginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const res = await fetch('/api/doctor/login', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({username: document.getElementById('l_user').value, password: document.getElementById('l_pass').value})
+        });
+        if(res.ok) window.location.href = '/doctor/dashboard';
+        else document.getElementById('authMsg').innerHTML = `<span class="error">Invalid credentials</span>`;
+    });
+
+    // Signup logic
+    document.getElementById('docSignupForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const res = await fetch('/api/doctor/signup', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                name: document.getElementById('s_name').value,
+                specialization: document.getElementById('s_spec').value,
+                qualification: document.getElementById('s_qual').value,
+                fee: document.getElementById('s_fee').value,
+                username: document.getElementById('s_user').value,
+                password: document.getElementById('s_pass').value
+            })
+        });
+        const data = await res.json();
+        if(res.ok) {
+            document.getElementById('authMsg').innerHTML = `<span class="success">${data.message}</span>`;
+            document.getElementById('docSignupForm').reset();
+            setTimeout(toggleForms, 1500);
+        } else {
+            document.getElementById('authMsg').innerHTML = `<span class="error">${data.error}</span>`;
+        }
+    });
+</script>
+</body>
+</html>

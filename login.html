@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pramod Hospital - Login</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #e0eafc; background: linear-gradient(to right, #cfdef3, #e0eafc); display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .auth-container { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h1 { text-align: center; color: #2c3e50; font-size: 24px; margin-bottom: 5px; }
+        p.subtitle { text-align: center; color: #7f8c8d; margin-bottom: 25px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #2980b9; color: white; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        button:hover { background: #3498db; }
+        .toggle-text { text-align: center; margin-top: 15px; font-size: 14px; }
+        .toggle-text a { color: #2980b9; cursor: pointer; text-decoration: underline; }
+        .hidden { display: none; }
+        .msg { text-align: center; margin-top: 10px; font-weight: bold; font-size: 14px;}
+        .error { color: #e74c3c; }
+        .success { color: #27ae60; }
+    </style>
+</head>
+<body>
+
+<div class="auth-container">
+    <h1>Pramod Hospital</h1>
+    <p class="subtitle">Smart Healthcare Management</p>
+
+    <div id="loginSection">
+        <form id="loginForm">
+            <div class="form-group"><label>Username</label><input type="text" id="l_user" required></div>
+            <div class="form-group"><label>Password</label><input type="password" id="l_pass" required></div>
+            <button type="submit">Login</button>
+        </form>
+        <div class="toggle-text">New user? <a onclick="toggleForms()">Sign up here</a></div>
+    </div>
+
+    <div id="signupSection" class="hidden">
+        <form id="signupForm">
+            <div class="form-group"><label>Full Name</label><input type="text" id="s_name" required></div>
+            <div class="form-group"><label>Username</label><input type="text" id="s_user" required></div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="s_pass" 
+                       pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$" 
+                       title="Must contain at least one number, one uppercase, one lowercase letter, one special character, and at least 8 or more characters" 
+                       required>
+            </div>
+            <button type="submit">Create Account</button>
+        </form>
+        <div class="toggle-text">Already have an account? <a onclick="toggleForms()">Login here</a></div>
+    </div>
+
+    <div id="authMsg" class="msg"></div>
+</div>
+
+<script>
+    function toggleForms() {
+        document.getElementById('loginSection').classList.toggle('hidden');
+        document.getElementById('signupSection').classList.toggle('hidden');
+        document.getElementById('authMsg').innerText = '';
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const res = await fetch('/api/login', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({username: document.getElementById('l_user').value, password: document.getElementById('l_pass').value})
+        });
+        if(res.ok) window.location.href = '/dashboard';
+        else document.getElementById('authMsg').innerHTML = `<span class="error">Invalid username or password</span>`;
+    });
+
+    document.getElementById('signupForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const res = await fetch('/api/signup', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                full_name: document.getElementById('s_name').value,
+                username: document.getElementById('s_user').value, 
+                password: document.getElementById('s_pass').value
+            })
+        });
+        const data = await res.json();
+        if(res.ok) {
+            document.getElementById('authMsg').innerHTML = `<span class="success">${data.message}</span>`;
+            document.getElementById('signupForm').reset();
+            setTimeout(toggleForms, 1500); // Switch back to login
+        } else {
+            document.getElementById('authMsg').innerHTML = `<span class="error">${data.error}</span>`;
+        }
+    });
+</script>
+</body>
+</html>
