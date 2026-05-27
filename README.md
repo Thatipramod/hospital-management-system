@@ -179,19 +179,19 @@ A properly configured `.gitignore` ensures:
 
 ## 🏠 Patient Dashboard
 
-![Patient Dashboard](screenshots/patient-dashboard.png)
+![Patient Dashboard](patient-dashboard.png)
 
 ---
 
 ## 🩺 Doctor Panel
 
-![Doctor Panel](screenshots/doctor-panel.png)
+![Doctor Panel](doctor-panel.png)
 
 ---
 
 ## 📊 Admin Analytics Dashboard
 
-![Admin Dashboard](screenshots/admin-dashboard.png)
+![Admin Dashboard](admin-dashboard.png)
 
 ---
 
